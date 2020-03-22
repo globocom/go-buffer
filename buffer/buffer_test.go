@@ -21,7 +21,7 @@ func bufferOptionsFixture() buffer.Options {
 			OnEach: func(item interface{}) error {
 				return nil
 			},
-			OnEnd: func() error {
+			OnEnd: func(item []interface{}) error {
 				return nil
 			},
 			OnStartError: func(item []interface{}, err error) {

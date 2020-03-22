@@ -6,7 +6,7 @@ type Options struct {
 	bypassOnEndError   bool // default false
 	OnStart            func([]interface{}) error
 	OnEach             func(interface{}) error
-	OnEnd              func() error
+	OnEnd              func([]interface{}) error
 	OnStartError       func([]interface{}, error)
 	OnEachError        func(interface{}, error)
 	OnEndError         func([]interface{}, error)
@@ -41,7 +41,7 @@ func (flusher *Flusher) flushItems(items []interface{}) error {
 }
 
 func (flusher *Flusher) flushEnd(items []interface{}) error {
-	err := flusher.Options.OnEnd()
+	err := flusher.Options.OnEnd(items)
 	if err != nil {
 		flusher.Options.OnEndError(items, err)
 		if !flusher.Options.bypassOnEndError {
