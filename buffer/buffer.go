@@ -2,7 +2,6 @@ package buffer
 
 import (
 	"errors"
-	"go-buffer/flusher"
 	"time"
 )
 
@@ -18,11 +17,11 @@ var (
 )
 
 type Options struct {
-	Size           int64
-	PushTimeout    time.Duration
-	CloseTimeout   time.Duration
-	FlushInterval  time.Duration
-	FlusherOptions flusher.Options
+	Size          int64
+	PushTimeout   time.Duration
+	CloseTimeout  time.Duration
+	FlushInterval time.Duration
+	Flusher       func([]interface{})
 }
 
 type Buffer struct {
@@ -30,7 +29,6 @@ type Buffer struct {
 	flusherChannel chan struct{}
 	doneChannel    chan struct{}
 	options        Options
-	flusher        *flusher.Flusher
 }
 
 func (buffer *Buffer) Push(item interface{}) error {
@@ -82,7 +80,7 @@ func (buffer *Buffer) consume() {
 
 		if flush {
 			ticker.Stop()
-			buffer.flusher.Flush(bufferArray[:count])
+			buffer.options.Flusher(bufferArray[:count])
 			count = 0
 			flush = false
 			ticker = time.NewTicker(buffer.options.FlushInterval)
@@ -111,18 +109,11 @@ func loadDefaultOptions(options Options) Options {
 
 func NewBuffer(options Options) (*Buffer, error) {
 	mergedOptions := loadDefaultOptions(options)
-	flusherInstance, err := flusher.NewFlusher(&mergedOptions.FlusherOptions)
-
-	if err != nil {
-		return nil, err
-	}
-
 	buff := &Buffer{
 		bufferChannel:  make(chan interface{}),
 		flusherChannel: make(chan struct{}),
 		doneChannel:    make(chan struct{}),
 		options:        mergedOptions,
-		flusher:        flusherInstance,
 	}
 	go buff.consume()
 	return buff, nil

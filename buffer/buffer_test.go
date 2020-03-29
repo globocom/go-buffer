@@ -1,9 +1,7 @@
 package buffer_test
 
 import (
-	"fmt"
 	"go-buffer/buffer"
-	"go-buffer/flusher"
 	"testing"
 	"time"
 )
@@ -14,25 +12,6 @@ func bufferOptionsFixture() buffer.Options {
 		PushTimeout:   time.Second,
 		CloseTimeout:  time.Second,
 		FlushInterval: time.Second,
-		FlusherOptions: flusher.Options{
-			OnStart: func(item []interface{}) error {
-				return nil
-			},
-			OnEach: func(item interface{}) error {
-				return nil
-			},
-			OnEnd: func(item []interface{}) error {
-				return nil
-			},
-			OnStartError: func(item []interface{}, err error) {
-			},
-			OnEachError: func(item interface{}, err error) {
-
-			},
-			OnEndError: func(item []interface{}, err error) {
-
-			},
-		},
 	}
 }
 
@@ -41,9 +20,8 @@ func TestBuffer(t *testing.T) {
 	t.Run("When buffer is full push should return an error", func(t *testing.T) {
 		// Arrange
 		bufferOptions := bufferOptionsFixture()
-		bufferOptions.FlusherOptions.OnEach = func(item interface{}) error {
+		bufferOptions.Flusher = func(items []interface{}) {
 			time.Sleep(time.Second)
-			return nil
 		}
 		bufferOptions.Size = 2
 
@@ -71,9 +49,8 @@ func TestBuffer(t *testing.T) {
 		flushed := false
 		bufferOptions := bufferOptionsFixture()
 		bufferOptions.FlushInterval = time.Millisecond * 500
-		bufferOptions.FlusherOptions.OnStart = func(item []interface{}) error {
+		bufferOptions.Flusher = func(items []interface{}) {
 			flushed = true
-			return nil
 		}
 
 		bufferInstance, _ := buffer.NewBuffer(bufferOptions)
@@ -93,9 +70,8 @@ func TestBuffer(t *testing.T) {
 		// Arrange
 		flushed := false
 		bufferOptions := bufferOptionsFixture()
-		bufferOptions.FlusherOptions.OnStart = func(item []interface{}) error {
+		bufferOptions.Flusher = func(items []interface{}) {
 			flushed = true
-			return nil
 		}
 
 		bufferInstance, _ := buffer.NewBuffer(bufferOptions)
@@ -113,10 +89,8 @@ func TestBuffer(t *testing.T) {
 		// Arrange
 		flushed := false
 		bufferOptions := bufferOptionsFixture()
-		bufferOptions.FlusherOptions.OnStart = func(item []interface{}) error {
-			fmt.Print("Flushed")
+		bufferOptions.Flusher = func(items []interface{}) {
 			flushed = true
-			return nil
 		}
 		bufferOptions.Size = 1
 
