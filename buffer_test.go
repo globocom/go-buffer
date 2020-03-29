@@ -1,7 +1,7 @@
 package buffer_test
 
 import (
-	"go-buffer/buffer"
+	"go-buffer"
 	"testing"
 	"time"
 )
