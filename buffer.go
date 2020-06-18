@@ -62,7 +62,7 @@ func (buffer *Buffer) consume() {
 	ticker := time.NewTicker(buffer.options.AutoFlushInterval)
 
 	count := 0
-	isOpen := false
+	isOpen := true
 	mustFlush := false
 
 	for isOpen {
