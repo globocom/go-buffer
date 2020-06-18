@@ -6,14 +6,14 @@ import (
 )
 
 var (
-	ErrFullBuffer   = errors.New("buffer is full")
-	ErrCloseTimeout = errors.New("close timed-out")
 	defaultOptions  = Options{
 		Size:          100,
 		PushTimeout:   time.Second,
 		CloseTimeout:  time.Second,
 		FlushInterval: time.Second,
 	}
+	ErrFull             = errors.New("buffer is full")
+	ErrOperationTimeout = errors.New("operation timed-out")
 )
 
 type Options struct {
@@ -36,7 +36,7 @@ func (buffer *Buffer) Push(item interface{}) error {
 	case buffer.bufferChannel <- item:
 		return nil
 	case <-time.After(buffer.options.PushTimeout):
-		return ErrFullBuffer
+		return ErrFull
 	}
 }
 
@@ -52,7 +52,7 @@ func (buffer *Buffer) Close() error {
 	case <-buffer.doneChannel:
 		return nil
 	case <-time.After(buffer.options.CloseTimeout):
-		return ErrCloseTimeout
+		return ErrOperationTimeout
 	}
 }
 
