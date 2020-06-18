@@ -31,9 +31,14 @@ func (buffer *Buffer) Push(item interface{}) error {
 	}
 }
 
-func (buffer *Buffer) ForceFlush() error {
-	buffer.flusherChannel <- struct{}{}
-	return nil
+// Flush outputs the buffer to a permanent destination. It might return an error if the buffer is already being flushed.
+func (buffer *Buffer) Flush() error {
+	select {
+	case buffer.flushCh <- struct{}{}:
+		return nil
+	case <-time.After(buffer.options.FlushTimeout):
+		return ErrOperationTimeout
+	}
 }
 
 func (buffer *Buffer) Close() error {
