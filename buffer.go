@@ -11,6 +11,8 @@ var (
 )
 
 type (
+	// Buffer represents a data buffer that is asynchronously flushed, either manually or
+	// automatically.
 	Buffer struct {
 		io.Closer
 		dataCh  chan interface{}
@@ -22,6 +24,7 @@ type (
 	}
 )
 
+// Push appends an item to the end of the Buffer. It might return an error if the buffer is full.
 func (buffer *Buffer) Push(item interface{}) error {
 	select {
 	case buffer.dataCh <- item:
@@ -41,6 +44,7 @@ func (buffer *Buffer) Flush() error {
 	}
 }
 
+// Close flushes the buffer and prevents it from being further used.
 func (buffer *Buffer) Close() error {
 	close(buffer.flushCh)
 
