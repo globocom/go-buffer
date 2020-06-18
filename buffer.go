@@ -10,16 +10,21 @@ var (
 	ErrOperationTimeout = errors.New("operation timed-out")
 )
 
-type Buffer struct {
-	bufferChannel  chan interface{}
-	flusherChannel chan struct{}
-	doneChannel    chan struct{}
-	options        Options
-}
+type (
+	Buffer struct {
+		io.Closer
+		dataCh  chan interface{}
+		flushCh chan struct{}
+		doneCh  chan struct{}
+		size    uint
+		flusher func([]interface{})
+		options *Options
+	}
+)
 
 func (buffer *Buffer) Push(item interface{}) error {
 	select {
-	case buffer.bufferChannel <- item:
+	case buffer.dataCh <- item:
 		return nil
 	case <-time.After(buffer.options.PushTimeout):
 		return ErrFull
@@ -32,10 +37,10 @@ func (buffer *Buffer) ForceFlush() error {
 }
 
 func (buffer *Buffer) Close() error {
-	close(buffer.flusherChannel)
+	close(buffer.flushCh)
 
 	select {
-	case <-buffer.doneChannel:
+	case <-buffer.doneCh:
 		return nil
 	case <-time.After(buffer.options.CloseTimeout):
 		return ErrOperationTimeout
@@ -43,64 +48,61 @@ func (buffer *Buffer) Close() error {
 }
 
 func (buffer *Buffer) consume() {
-	bufferArray := make([]interface{}, buffer.options.Size)
-	ticker := time.NewTicker(buffer.options.FlushInterval)
-	defer ticker.Stop()
+	items := make([]interface{}, buffer.size)
+	ticker := time.NewTicker(buffer.options.AutoFlushInterval)
 
 	count := 0
-	closed := false
-	flush := false
+	isOpen := false
+	mustFlush := false
 
-	for !closed {
+	for isOpen {
 		select {
-		case item := <-buffer.bufferChannel:
-			bufferArray[count] = item
+		case item := <-buffer.dataCh:
+			items[count] = item
 			count++
-			flush = count >= len(bufferArray)
+			mustFlush = count >= len(items)
 		case <-ticker.C:
-			flush = count > 0
-		case _, open := <-buffer.flusherChannel:
-			closed = !open
-			flush = count > 0
+			mustFlush = count > 0
+		case _, open := <-buffer.flushCh:
+			isOpen = open
+			mustFlush = count > 0
 		}
 
-		if flush {
+		if mustFlush {
 			ticker.Stop()
-			buffer.options.Flusher(bufferArray[:count])
+			buffer.flusher(items[:count])
 			count = 0
-			flush = false
-			ticker = time.NewTicker(buffer.options.FlushInterval)
+			mustFlush = false
+			ticker = time.NewTicker(buffer.options.AutoFlushInterval)
 		}
 	}
 
-	buffer.doneChannel <- struct{}{}
+	ticker.Stop()
+	buffer.doneCh <- struct{}{}
 }
 
-func loadDefaultOptions(options Options) Options {
-	if options.Size == 0 {
-		options.Size = defaultOptions.Size
+// New creates a new buffer instance
+func New(size uint, flusher func([]interface{}), opts ...Option) (*Buffer, error) {
+	options := &Options{
+		AutoFlushInterval: time.Hour,
+		PushTimeout:       time.Second,
+		FlushTimeout:      time.Second,
+		CloseTimeout:      time.Second,
 	}
-	if options.CloseTimeout == 0 {
-		options.CloseTimeout = defaultOptions.CloseTimeout
-	}
-	if options.FlushInterval == 0 {
-		options.FlushInterval = defaultOptions.FlushInterval
-	}
-	if options.PushTimeout == 0 {
-		options.PushTimeout = defaultOptions.PushTimeout
-	}
-	return options
 
-}
-
-func NewBuffer(options Options) (*Buffer, error) {
-	mergedOptions := loadDefaultOptions(options)
-	buff := &Buffer{
-		bufferChannel:  make(chan interface{}),
-		flusherChannel: make(chan struct{}),
-		doneChannel:    make(chan struct{}),
-		options:        mergedOptions,
+	for _, opt := range opts {
+		opt(options)
 	}
-	go buff.consume()
-	return buff, nil
+
+	buffer := &Buffer{
+		dataCh:  make(chan interface{}),
+		flushCh: make(chan struct{}),
+		doneCh:  make(chan struct{}),
+		size:    size,
+		flusher: flusher,
+		options: options,
+	}
+	go buffer.consume()
+
+	return buffer, nil
 }
