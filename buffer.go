@@ -6,12 +6,6 @@ import (
 )
 
 var (
-	defaultOptions  = Options{
-		Size:          100,
-		PushTimeout:   time.Second,
-		CloseTimeout:  time.Second,
-		FlushInterval: time.Second,
-	}
 	ErrFull             = errors.New("buffer is full")
 	ErrOperationTimeout = errors.New("operation timed-out")
 )
