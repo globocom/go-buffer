@@ -4,6 +4,7 @@ import "time"
 
 type (
 	Options struct {
+		AutoFlush         bool
 		AutoFlushInterval time.Duration
 		PushTimeout       time.Duration
 		FlushTimeout      time.Duration
@@ -15,6 +16,7 @@ type (
 
 func WithAutoFlush(interval time.Duration) Option {
 	return func(options *Options) {
+		options.AutoFlush = true
 		options.AutoFlushInterval = interval
 	}
 }
