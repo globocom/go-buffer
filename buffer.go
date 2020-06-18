@@ -2,6 +2,7 @@ package buffer
 
 import (
 	"errors"
+	"io"
 	"time"
 )
 
