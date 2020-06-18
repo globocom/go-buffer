@@ -10,14 +10,6 @@ var (
 	ErrOperationTimeout = errors.New("operation timed-out")
 )
 
-type Options struct {
-	Size          int64
-	PushTimeout   time.Duration
-	CloseTimeout  time.Duration
-	FlushInterval time.Duration
-	Flusher       func([]interface{})
-}
-
 type Buffer struct {
 	bufferChannel  chan interface{}
 	flusherChannel chan struct{}
