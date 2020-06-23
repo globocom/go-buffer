@@ -112,7 +112,7 @@ func newTicker(interval time.Duration) (<-chan time.Time, func()) {
 }
 
 // New creates a new buffer instance with the provided options.
-func New(size uint, flusher FlushFunc, opts ...Option) (*Buffer, error) {
+func New(size uint, flusher FlushFunc, opts ...Option) *Buffer {
 	if size == 0 {
 		panic(invalidSize)
 	}
@@ -141,5 +141,5 @@ func New(size uint, flusher FlushFunc, opts ...Option) (*Buffer, error) {
 	}
 	go buffer.consume()
 
-	return buffer, nil
+	return buffer
 }
