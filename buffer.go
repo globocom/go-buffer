@@ -58,6 +58,7 @@ func (buffer *Buffer) Flush() error {
 // out if it cannot be performed in a timely fashion.
 // The buffer must not be used after it has been closed as all further operations will panic.
 func (buffer *Buffer) Close() error {
+	close(buffer.dataCh)
 	close(buffer.flushCh)
 
 	select {
