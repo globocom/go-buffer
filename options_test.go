@@ -10,21 +10,20 @@ import (
 )
 
 var _ = Describe("Options", func() {
-	Context("WithAutoFlush", func() {
+	Context("WithFlushInterval", func() {
 		It("sets up auto flush", func() {
 			// arrange
 			opts := &buffer.Options{}
 
 			// act
-			buffer.WithAutoFlush(5 * time.Second)(opts)
+			buffer.WithFlushInterval(5 * time.Second)(opts)
 
 			// assert
-			Expect(opts.AutoFlush).To(BeTrue())
-			Expect(opts.AutoFlushInterval).To(Equal(5 * time.Second))
+			Expect(opts.FlushInterval).To(Equal(5 * time.Second))
 		})
 
 		It("panics when provided with an invalid interval", func() {
-			Expect(func() { buffer.WithAutoFlush(0) }).To(PanicWith("invalid interval"))
+			Expect(func() { buffer.WithFlushInterval(0) }).To(Panic())
 		})
 	})
 

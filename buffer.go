@@ -109,10 +109,10 @@ func New(size uint, flusher func([]interface{}), opts ...Option) (*Buffer, error
 	}
 
 	options := &Options{
-		AutoFlushInterval: time.Hour,
-		PushTimeout:       time.Second,
-		FlushTimeout:      time.Second,
-		CloseTimeout:      time.Second,
+		FlushInterval: 0,
+		PushTimeout:   time.Second,
+		FlushTimeout:  time.Second,
+		CloseTimeout:  time.Second,
 	}
 
 	for _, opt := range opts {

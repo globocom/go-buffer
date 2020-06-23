@@ -9,24 +9,23 @@ const (
 
 type (
 	Options struct {
-		AutoFlush         bool
-		AutoFlushInterval time.Duration
-		PushTimeout       time.Duration
-		FlushTimeout      time.Duration
-		CloseTimeout      time.Duration
+		FlushInterval time.Duration
+		PushTimeout   time.Duration
+		FlushTimeout  time.Duration
+		CloseTimeout  time.Duration
 	}
 
 	Option func(*Options)
 )
 
-func WithAutoFlush(interval time.Duration) Option {
+// WithFlushInterval sets the interval between automatic flushes.
+func WithFlushInterval(interval time.Duration) Option {
 	if interval <= 0 {
 		panic(invalidInterval)
 	}
 
 	return func(options *Options) {
-		options.AutoFlush = true
-		options.AutoFlushInterval = interval
+		options.FlushInterval = interval
 	}
 }
 
