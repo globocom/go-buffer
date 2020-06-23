@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	ErrFull             = errors.New("buffer is full")
-	ErrOperationTimeout = errors.New("operation timed-out")
+	// ErrTimeout indicates an operation has timed out.
+	ErrTimeout = errors.New("operation timed-out")
 )
 
 type (
@@ -31,7 +31,7 @@ func (buffer *Buffer) Push(item interface{}) error {
 	case buffer.dataCh <- item:
 		return nil
 	case <-time.After(buffer.options.PushTimeout):
-		return ErrFull
+		return ErrTimeout
 	}
 }
 
@@ -41,7 +41,7 @@ func (buffer *Buffer) Flush() error {
 	case buffer.flushCh <- struct{}{}:
 		return nil
 	case <-time.After(buffer.options.FlushTimeout):
-		return ErrOperationTimeout
+		return ErrTimeout
 	}
 }
 
@@ -53,7 +53,7 @@ func (buffer *Buffer) Close() error {
 	case <-buffer.doneCh:
 		return nil
 	case <-time.After(buffer.options.CloseTimeout):
-		return ErrOperationTimeout
+		return ErrTimeout
 	}
 }
 
