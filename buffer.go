@@ -12,8 +12,7 @@ var (
 )
 
 type (
-	// Buffer represents a data buffer that is asynchronously flushed, either manually or
-	// automatically.
+	// Buffer represents a data buffer that is asynchronously flushed, either manually or automatically.
 	Buffer struct {
 		io.Closer
 		dataCh  chan interface{}
@@ -25,7 +24,8 @@ type (
 	}
 )
 
-// Push appends an item to the end of the Buffer. It might return an error if the buffer is full.
+// Push appends an item to the end of the buffer. It times out if it cannot be
+// performed in a timely fashion.
 func (buffer *Buffer) Push(item interface{}) error {
 	select {
 	case buffer.dataCh <- item:
@@ -35,7 +35,8 @@ func (buffer *Buffer) Push(item interface{}) error {
 	}
 }
 
-// Flush outputs the buffer to a permanent destination. It might return an error if the buffer is already being flushed.
+// Flush outputs the buffer to a permanent destination. It times out if it cannot be
+// performed in a timely fashion.
 func (buffer *Buffer) Flush() error {
 	select {
 	case buffer.flushCh <- struct{}{}:
@@ -45,7 +46,9 @@ func (buffer *Buffer) Flush() error {
 	}
 }
 
-// Close flushes the buffer and prevents it from being further used.
+// Close flushes the buffer and prevents it from being further used. It times
+// out if it cannot be performed in a timely fashion.
+// The buffer must not be used after it has been closed as all further operations will panic.
 func (buffer *Buffer) Close() error {
 	close(buffer.flushCh)
 
