@@ -67,7 +67,7 @@ func (buffer *Buffer) Close() error {
 
 func (buffer *Buffer) consume() {
 	items := make([]interface{}, buffer.size)
-	ticker := time.NewTicker(buffer.options.AutoFlushInterval)
+	ticker, stopTicker := newTicker(buffer.options.FlushInterval)
 
 	count := 0
 	isOpen := true
@@ -79,7 +79,7 @@ func (buffer *Buffer) consume() {
 			items[count] = item
 			count++
 			mustFlush = count >= len(items)
-		case <-ticker.C:
+		case <-ticker:
 			mustFlush = count > 0
 		case _, open := <-buffer.flushCh:
 			isOpen = open
@@ -87,16 +87,25 @@ func (buffer *Buffer) consume() {
 		}
 
 		if mustFlush {
-			ticker.Stop()
+			stopTicker()
 			buffer.flusher(items[:count])
 			count = 0
 			mustFlush = false
-			ticker = time.NewTicker(buffer.options.AutoFlushInterval)
+			ticker, stopTicker = newTicker(buffer.options.FlushInterval)
 		}
 	}
 
-	ticker.Stop()
+	stopTicker()
 	buffer.doneCh <- struct{}{}
+}
+
+func newTicker(interval time.Duration) (<-chan time.Time, func()) {
+	if interval == 0 {
+		return nil, func() {}
+	}
+
+	ticker := time.NewTicker(interval)
+	return ticker.C, ticker.Stop
 }
 
 func New(size uint, flusher func([]interface{}), opts ...Option) (*Buffer, error) {
