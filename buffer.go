@@ -132,6 +132,10 @@ func New(size uint, flusher FlushFunc, opts ...Option) *Buffer {
 		opt(options)
 	}
 
+	if err := validateOptions(options); err != nil {
+		panic(err.Error())
+	}
+
 	buffer := &Buffer{
 		dataCh:  make(chan interface{}),
 		flushCh: make(chan struct{}),
