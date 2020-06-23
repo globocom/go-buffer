@@ -6,11 +6,6 @@ import (
 	"time"
 )
 
-const (
-	invalidSize    = "go-buffer: size must be greater than zero"
-	invalidFlusher = "go-buffer: flusher is required"
-)
-
 var (
 	// ErrTimeout indicates an operation has timed out.
 	ErrTimeout = errors.New("operation timed-out")
@@ -23,13 +18,8 @@ type (
 		dataCh  chan interface{}
 		flushCh chan struct{}
 		doneCh  chan struct{}
-		size    uint
-		flusher FlushFunc
 		options *Options
 	}
-
-	// FlushFunc represents a flush function.
-	FlushFunc func([]interface{})
 )
 
 // Push appends an item to the end of the buffer. It times out if it cannot be
@@ -70,7 +60,7 @@ func (buffer *Buffer) Close() error {
 }
 
 func (buffer *Buffer) consume() {
-	items := make([]interface{}, buffer.size)
+	items := make([]interface{}, buffer.options.Size)
 	ticker, stopTicker := newTicker(buffer.options.FlushInterval)
 
 	count := 0
@@ -92,7 +82,7 @@ func (buffer *Buffer) consume() {
 
 		if mustFlush {
 			stopTicker()
-			buffer.flusher(items[:count])
+			buffer.options.Flusher(items[:count])
 			count = 0
 			mustFlush = false
 			ticker, stopTicker = newTicker(buffer.options.FlushInterval)
@@ -113,15 +103,10 @@ func newTicker(interval time.Duration) (<-chan time.Time, func()) {
 }
 
 // New creates a new buffer instance with the provided options.
-func New(size uint, flusher FlushFunc, opts ...Option) *Buffer {
-	if size == 0 {
-		panic(invalidSize)
-	}
-	if flusher == nil {
-		panic(invalidFlusher)
-	}
-
+func New(opts ...Option) *Buffer {
 	options := &Options{
+		Size:          0,
+		Flusher:       nil,
 		FlushInterval: 0,
 		PushTimeout:   time.Second,
 		FlushTimeout:  time.Second,
@@ -140,8 +125,6 @@ func New(size uint, flusher FlushFunc, opts ...Option) *Buffer {
 		dataCh:  make(chan interface{}),
 		flushCh: make(chan struct{}),
 		doneCh:  make(chan struct{}),
-		size:    size,
-		flusher: flusher,
 		options: options,
 	}
 	go buffer.consume()

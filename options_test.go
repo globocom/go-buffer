@@ -10,6 +10,29 @@ import (
 )
 
 var _ = Describe("Options", func() {
+	It("sets up size", func() {
+		// arrange
+		opts := &buffer.Options{}
+
+		// act
+		buffer.WithSize(10)(opts)
+
+		// assert
+		Expect(opts.Size).To(BeIdenticalTo(uint(10)))
+	})
+
+	It("sets up flusher", func() {
+		// arrange
+		opts := &buffer.Options{}
+		flusher := func(items []interface{}) {}
+
+		// act
+		buffer.WithFlusher(flusher)(opts)
+
+		// assert
+		Expect(opts.Flusher).NotTo(BeNil())
+	})
+
 	It("sets up flush interval", func() {
 		// arrange
 		opts := &buffer.Options{}
