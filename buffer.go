@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+const (
+	invalidSize    = "go-buffer: size must be greater than zero"
+	invalidFlusher = "go-buffer: flusher is required"
+)
+
 var (
 	// ErrTimeout indicates an operation has timed out.
 	ErrTimeout = errors.New("operation timed-out")
@@ -94,8 +99,15 @@ func (buffer *Buffer) consume() {
 	buffer.doneCh <- struct{}{}
 }
 
-// New creates a new buffer instance
 func New(size uint, flusher func([]interface{}), opts ...Option) (*Buffer, error) {
+// New creates a new buffer instance with the provided options.
+	if size == 0 {
+		panic(invalidSize)
+	}
+	if flusher == nil {
+		panic(invalidFlusher)
+	}
+
 	options := &Options{
 		AutoFlushInterval: time.Hour,
 		PushTimeout:       time.Second,
