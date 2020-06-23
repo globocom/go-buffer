@@ -24,9 +24,12 @@ type (
 		flushCh chan struct{}
 		doneCh  chan struct{}
 		size    uint
-		flusher func([]interface{})
+		flusher FlushFunc
 		options *Options
 	}
+
+	// FlushFunc represents a flush function.
+	FlushFunc func([]interface{})
 )
 
 // Push appends an item to the end of the buffer. It times out if it cannot be
@@ -108,8 +111,8 @@ func newTicker(interval time.Duration) (<-chan time.Time, func()) {
 	return ticker.C, ticker.Stop
 }
 
-func New(size uint, flusher func([]interface{}), opts ...Option) (*Buffer, error) {
 // New creates a new buffer instance with the provided options.
+func New(size uint, flusher FlushFunc, opts ...Option) (*Buffer, error) {
 	if size == 0 {
 		panic(invalidSize)
 	}
