@@ -82,7 +82,7 @@ func (buffer *Buffer) consume() {
 
 		if mustFlush {
 			stopTicker()
-			buffer.options.Flusher(items[:count])
+			buffer.options.Flusher.Write(items[:count])
 			count = 0
 			mustFlush = false
 			ticker, stopTicker = newTicker(buffer.options.FlushInterval)

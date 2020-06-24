@@ -27,7 +27,7 @@ var _ = Describe("Options", func() {
 		flusher := func(items []interface{}) {}
 
 		// act
-		buffer.WithFlusher(flusher)(opts)
+		buffer.WithFlusher(buffer.FlusherFunc(flusher))(opts)
 
 		// assert
 		Expect(opts.Flusher).NotTo(BeNil())

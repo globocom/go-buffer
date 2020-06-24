@@ -17,15 +17,12 @@ type (
 	// Configuration options.
 	Options struct {
 		Size          uint
-		Flusher       FlushFunc
+		Flusher       Flusher
 		FlushInterval time.Duration
 		PushTimeout   time.Duration
 		FlushTimeout  time.Duration
 		CloseTimeout  time.Duration
 	}
-
-	// FlushFunc represents a flush function.
-	FlushFunc func([]interface{})
 
 	// Option setter.
 	Option func(*Options)
@@ -38,8 +35,8 @@ func WithSize(size uint) Option {
 	}
 }
 
-// WithFlusher sets the function to be called when the buffer is flushed.
-func WithFlusher(flusher FlushFunc) Option {
+// WithFlusher sets the flusher that should be used to write out the buffer.
+func WithFlusher(flusher Flusher) Option {
 	return func(options *Options) {
 		options.Flusher = flusher
 	}
