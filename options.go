@@ -83,7 +83,7 @@ func validateOptions(options *Options) error {
 	if options.PushTimeout < 0 {
 		return fmt.Errorf(invalidTimeout, "PushTimeout")
 	}
-	if options.FlushInterval < 0 {
+	if options.FlushTimeout < 0 {
 		return fmt.Errorf(invalidTimeout, "FlushTimeout")
 	}
 	if options.CloseTimeout < 0 {
