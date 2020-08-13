@@ -1,11 +1,16 @@
 <p align="center">
   <img src="gopher.png">
 </p>
-
-![Go](https://img.shields.io/github/workflow/status/globocom/go-buffer/Go?style=flat-square)
-[![License](https://img.shields.io/github/license/globocom/go-buffer?color=blue&style=flat-square)](https://github.com/globocom/go-buffer/blob/master/LICENSE)
-![Go](https://img.shields.io/github/go-mod/go-version/globocom/go-buffer?style=flat-square)
-[![PkgGoDev](https://img.shields.io/badge/Go-reference-blue?style=flat-square)](https://pkg.go.dev/github.com/globocom/go-buffer)
+<p align="center">
+  <img src="https://img.shields.io/github/workflow/status/globocom/go-buffer/Go?style=flat-square">
+  <a href="https://github.com/globocom/go-buffer/blob/master/LICENSE">
+    <img src="https://img.shields.io/github/license/globocom/go-buffer?color=blue&style=flat-square">
+  </a>
+  <img src="https://img.shields.io/github/go-mod/go-version/globocom/go-buffer?style=flat-square">
+  <a href="https://pkg.go.dev/github.com/globocom/go-buffer">
+    <img src="https://img.shields.io/badge/Go-reference-blue?style=flat-square">
+  </a>
+</p>
 
 # go-buffer
 
@@ -17,7 +22,7 @@
 
 ## Examples
 
-### Size-based flush
+### Size-triggered flush
 
 ```golang
 package main
@@ -39,6 +44,7 @@ func main() {
       }
     }),
   )
+  // ensure the buffer 
   defer buff.Close()
 
   buff.Push("item 1")
@@ -54,7 +60,7 @@ func main() {
 }
 ```
 
-### Interval-based flush
+### Interval-triggered flush
 
 ```golang
 package main
