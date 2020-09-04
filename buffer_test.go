@@ -243,6 +243,33 @@ var _ = Describe("Buffer", func() {
 			// assert
 			Expect(err).To(MatchError(buffer.ErrTimeout))
 		})
+
+		It("allow Close to be called again if it fails", func() {
+			// arrange
+			flusher.Func = func() { time.Sleep(2 * time.Second) }
+
+			sut := buffer.New(
+				buffer.WithSize(1),
+				buffer.WithFlusher(flusher),
+				buffer.WithCloseTimeout(time.Second),
+			)
+			_ = sut.Push(1)
+
+			// act
+			err := sut.Close()
+
+			// assert
+			Expect(err).To(MatchError(buffer.ErrTimeout))
+
+			// arrange
+			time.Sleep(time.Second)
+
+			// act
+			err = sut.Close()
+
+			// assert
+			Expect(err).To(BeNil())
+		})
 	})
 })
 
