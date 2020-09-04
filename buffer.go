@@ -64,13 +64,12 @@ func (buffer *Buffer) Close() error {
 }
 
 func (buffer *Buffer) consume() {
+	count := 0
 	items := make([]interface{}, buffer.options.Size)
+	mustFlush := false
 	ticker, stopTicker := newTicker(buffer.options.FlushInterval)
 
-	count := 0
 	isOpen := true
-	mustFlush := false
-
 	for isOpen {
 		select {
 		case item := <-buffer.dataCh:
@@ -89,7 +88,9 @@ func (buffer *Buffer) consume() {
 		if mustFlush {
 			stopTicker()
 			buffer.options.Flusher.Write(items[:count])
+
 			count = 0
+			items = make([]interface{}, buffer.options.Size)
 			mustFlush = false
 			ticker, stopTicker = newTicker(buffer.options.FlushInterval)
 		}
