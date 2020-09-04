@@ -92,3 +92,24 @@ func validateOptions(options *Options) error {
 
 	return nil
 }
+
+func resolveOptions(opts ...Option) *Options {
+	options := &Options{
+		Size:          0,
+		Flusher:       nil,
+		FlushInterval: 0,
+		PushTimeout:   time.Second,
+		FlushTimeout:  time.Second,
+		CloseTimeout:  time.Second,
+	}
+
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	if err := validateOptions(options); err != nil {
+		panic(err)
+	}
+
+	return options
+}

@@ -110,29 +110,12 @@ func newTicker(interval time.Duration) (<-chan time.Time, func()) {
 
 // New creates a new buffer instance with the provided options.
 func New(opts ...Option) *Buffer {
-	options := &Options{
-		Size:          0,
-		Flusher:       nil,
-		FlushInterval: 0,
-		PushTimeout:   time.Second,
-		FlushTimeout:  time.Second,
-		CloseTimeout:  time.Second,
-	}
-
-	for _, opt := range opts {
-		opt(options)
-	}
-
-	if err := validateOptions(options); err != nil {
-		panic(err.Error())
-	}
-
 	buffer := &Buffer{
 		dataCh:  make(chan interface{}),
 		flushCh: make(chan struct{}),
 		closeCh: make(chan struct{}),
 		doneCh:  make(chan struct{}),
-		options: options,
+		options: resolveOptions(opts...),
 	}
 	go buffer.consume()
 
