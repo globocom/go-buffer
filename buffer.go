@@ -45,22 +45,25 @@ func (buffer *Buffer) Flush() error {
 	}
 }
 
-// Close flushes the buffer and prevents it from being further used. The buffer
-// cannot be used after it has been closed as all further operations will panic.
+// Close flushes the buffer and prevents it from being further used. If it succeeds,
+// the buffer cannot be used after it has been closed as all further operations will panic.
 func (buffer *Buffer) Close() error {
-	close(buffer.closeCh)
-
-	var err error
 	select {
-	case <-buffer.doneCh:
-		err = nil
+	case buffer.closeCh <- struct{}{}:
+		// noop
 	case <-time.After(buffer.options.CloseTimeout):
-		err = ErrTimeout
+		return ErrTimeout
 	}
 
-	close(buffer.dataCh)
-	close(buffer.flushCh)
-	return err
+	select {
+	case <-buffer.doneCh:
+		close(buffer.dataCh)
+		close(buffer.flushCh)
+		close(buffer.closeCh)
+		return nil
+	case <-time.After(buffer.options.CloseTimeout):
+		return ErrTimeout
+	}
 }
 
 func (buffer *Buffer) consume() {
