@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/globocom/go-buffer"
+	"github.com/globocom/go-buffer/v2"
 )
 
 var _ = Describe("Buffer", func() {

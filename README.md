@@ -30,7 +30,7 @@ package main
 import (
   "time"
 
-  "github.com/globocom/go-buffer"
+  "github.com/globocom/go-buffer/v2"
 )
 
 func main() {
@@ -44,7 +44,7 @@ func main() {
       }
     }),
   )
-  // ensure the buffer 
+  // ensure the buffer
   defer buff.Close()
 
   buff.Push("item 1")
@@ -68,7 +68,7 @@ package main
 import (
   "time"
 
-  "github.com/globocom/go-buffer"
+  "github.com/globocom/go-buffer/v2"
 )
 
 func main() {
@@ -106,7 +106,7 @@ package main
 import (
   "time"
 
-  "github.com/globocom/go-buffer"
+  "github.com/globocom/go-buffer/v2"
 )
 
 func main() {

@@ -3,7 +3,7 @@ package buffer_test
 import (
 	"testing"
 
-	"github.com/globocom/go-buffer"
+	"github.com/globocom/go-buffer/v2"
 )
 
 func BenchmarkBuffer(b *testing.B) {

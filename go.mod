@@ -1,4 +1,4 @@
-module github.com/globocom/go-buffer
+module github.com/globocom/go-buffer/v2
 
 go 1.13
 
