@@ -9,6 +9,8 @@ import (
 var (
 	// ErrTimeout indicates an operation has timed out.
 	ErrTimeout = errors.New("operation timed-out")
+	// ErrClosed indicates the buffer is closed and can no longer be used.
+	ErrClosed = errors.New("buffer is closed")
 )
 
 type (
@@ -23,9 +25,15 @@ type (
 	}
 )
 
-// Push appends an item to the end of the buffer. It times out if it cannot be
-// performed in a timely fashion.
+// Push appends an item to the end of the buffer.
+//
+// It returns an ErrTimeout if if cannot be performed in a timely fashion, and
+// an ErrClosed if the buffer has been closed.
 func (buffer *Buffer) Push(item interface{}) error {
+	if buffer.closed() {
+		return ErrClosed
+	}
+
 	select {
 	case buffer.dataCh <- item:
 		return nil
@@ -34,9 +42,15 @@ func (buffer *Buffer) Push(item interface{}) error {
 	}
 }
 
-// Flush outputs the buffer to a permanent destination. It times out if it cannot be
-// performed in a timely fashion.
+// Flush outputs the buffer to a permanent destination.
+//
+// It returns an ErrTimeout if if cannot be performed in a timely fashion, and
+// an ErrClosed if the buffer has been closed.
 func (buffer *Buffer) Flush() error {
+	if buffer.closed() {
+		return ErrClosed
+	}
+
 	select {
 	case buffer.flushCh <- struct{}{}:
 		return nil
@@ -45,9 +59,19 @@ func (buffer *Buffer) Flush() error {
 	}
 }
 
-// Close flushes the buffer and prevents it from being further used. If it succeeds,
-// the buffer cannot be used after it has been closed as all further operations will panic.
+// Close flushes the buffer and prevents it from being further used.
+//
+// It returns an ErrTimeout if if cannot be performed in a timely fashion, and
+// an ErrClosed if the buffer has already been closed.
+//
+// An ErrTimeout can either mean that a flush could not be triggered, or it can
+// mean that a flush was triggered but it has not finished yet. In any case it is
+// safe to call Close again.
 func (buffer *Buffer) Close() error {
+	if buffer.closed() {
+		return ErrClosed
+	}
+
 	select {
 	case buffer.closeCh <- struct{}{}:
 		// noop
@@ -63,6 +87,15 @@ func (buffer *Buffer) Close() error {
 		return nil
 	case <-time.After(buffer.options.CloseTimeout):
 		return ErrTimeout
+	}
+}
+
+func (buffer Buffer) closed() bool {
+	select {
+	case <-buffer.doneCh:
+		return true
+	default:
+		return false
 	}
 }
 

@@ -126,6 +126,21 @@ var _ = Describe("Buffer", func() {
 			Expect(err2).To(Succeed())
 			Expect(err3).To(MatchError(buffer.ErrTimeout))
 		})
+
+		It("fails when the buffer is closed", func() {
+			// arrange
+			sut := buffer.New(
+				buffer.WithSize(2),
+				buffer.WithFlusher(flusher),
+			)
+			_ = sut.Close()
+
+			// act
+			err := sut.Push(1)
+
+			// assert
+			Expect(err).To(MatchError(buffer.ErrClosed))
+		})
 	})
 
 	Context("Flushing", func() {
@@ -204,6 +219,21 @@ var _ = Describe("Buffer", func() {
 			// assert
 			Expect(err).To(MatchError(buffer.ErrTimeout))
 		})
+
+		It("fails when the buffer is closed", func() {
+			// arrange
+			sut := buffer.New(
+				buffer.WithSize(2),
+				buffer.WithFlusher(flusher),
+			)
+			_ = sut.Close()
+
+			// act
+			err := sut.Flush()
+
+			// assert
+			Expect(err).To(MatchError(buffer.ErrClosed))
+		})
 	})
 
 	Context("Closing", func() {
@@ -244,7 +274,25 @@ var _ = Describe("Buffer", func() {
 			Expect(err).To(MatchError(buffer.ErrTimeout))
 		})
 
-		It("allow Close to be called again if it fails", func() {
+		It("fails when the buffer is closed", func() {
+			// arrange
+			flusher.Func = func() { time.Sleep(2 * time.Second) }
+
+			sut := buffer.New(
+				buffer.WithSize(1),
+				buffer.WithFlusher(flusher),
+				buffer.WithCloseTimeout(time.Second),
+			)
+			_ = sut.Close()
+
+			// act
+			err := sut.Close()
+
+			// assert
+			Expect(err).To(MatchError(buffer.ErrClosed))
+		})
+
+		It("allows Close to be called again if it fails", func() {
 			// arrange
 			flusher.Func = func() { time.Sleep(2 * time.Second) }
 
@@ -256,19 +304,13 @@ var _ = Describe("Buffer", func() {
 			_ = sut.Push(1)
 
 			// act
-			err := sut.Close()
-
-			// assert
-			Expect(err).To(MatchError(buffer.ErrTimeout))
-
-			// arrange
+			err1 := sut.Close()
 			time.Sleep(time.Second)
-
-			// act
-			err = sut.Close()
+			err2 := sut.Close()
 
 			// assert
-			Expect(err).To(BeNil())
+			Expect(err1).To(MatchError(buffer.ErrTimeout))
+			Expect(err2).To(Succeed())
 		})
 	})
 })
