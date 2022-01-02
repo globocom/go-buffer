@@ -15,21 +15,42 @@ var (
 
 type (
 	// Buffer represents a data buffer that is asynchronously flushed, either manually or automatically.
-	Buffer struct {
+	Buffer[T any] struct {
 		io.Closer
-		dataCh  chan interface{}
-		flushCh chan struct{}
-		closeCh chan struct{}
-		doneCh  chan struct{}
-		options *Options
+		flushFunc func([]T)
+		dataCh    chan T
+		flushCh   chan struct{}
+		closeCh   chan struct{}
+		doneCh    chan struct{}
+		options   *Options
 	}
 )
 
+// New creates a new buffer instance with the provided flush function and options.
+// It panics if provided with a nil flush function.
+func New[T any](flushFunc func([]T), opts ...Option) *Buffer[T] {
+	if flushFunc == nil {
+		panic("flush function cannot be nil")
+	}
+
+	buffer := &Buffer[T]{
+		flushFunc: flushFunc,
+		dataCh:    make(chan T),
+		flushCh:   make(chan struct{}),
+		closeCh:   make(chan struct{}),
+		doneCh:    make(chan struct{}),
+		options:   resolveOptions(opts...),
+	}
+	go buffer.consume()
+
+	return buffer
+}
+
 // Push appends an item to the end of the buffer.
 //
-// It returns an ErrTimeout if if cannot be performed in a timely fashion, and
+// It returns an ErrTimeout if it cannot be performed in a timely fashion, and
 // an ErrClosed if the buffer has been closed.
-func (buffer *Buffer) Push(item interface{}) error {
+func (buffer *Buffer[T]) Push(item T) error {
 	if buffer.closed() {
 		return ErrClosed
 	}
@@ -46,7 +67,7 @@ func (buffer *Buffer) Push(item interface{}) error {
 //
 // It returns an ErrTimeout if if cannot be performed in a timely fashion, and
 // an ErrClosed if the buffer has been closed.
-func (buffer *Buffer) Flush() error {
+func (buffer *Buffer[T]) Flush() error {
 	if buffer.closed() {
 		return ErrClosed
 	}
@@ -67,7 +88,7 @@ func (buffer *Buffer) Flush() error {
 // An ErrTimeout can either mean that a flush could not be triggered, or it can
 // mean that a flush was triggered but it has not finished yet. In any case it is
 // safe to call Close again.
-func (buffer *Buffer) Close() error {
+func (buffer *Buffer[T]) Close() error {
 	if buffer.closed() {
 		return ErrClosed
 	}
@@ -90,7 +111,7 @@ func (buffer *Buffer) Close() error {
 	}
 }
 
-func (buffer Buffer) closed() bool {
+func (buffer *Buffer[T]) closed() bool {
 	select {
 	case <-buffer.doneCh:
 		return true
@@ -99,9 +120,9 @@ func (buffer Buffer) closed() bool {
 	}
 }
 
-func (buffer *Buffer) consume() {
+func (buffer *Buffer[T]) consume() {
 	count := 0
-	items := make([]interface{}, buffer.options.Size)
+	items := make([]T, buffer.options.Size)
 	mustFlush := false
 	ticker, stopTicker := newTicker(buffer.options.FlushInterval)
 
@@ -123,10 +144,10 @@ func (buffer *Buffer) consume() {
 
 		if mustFlush {
 			stopTicker()
-			buffer.options.Flusher.Write(items[:count])
+			buffer.flushFunc(items[:count])
 
 			count = 0
-			items = make([]interface{}, buffer.options.Size)
+			items = make([]T, buffer.options.Size)
 			mustFlush = false
 			ticker, stopTicker = newTicker(buffer.options.FlushInterval)
 		}
@@ -143,18 +164,4 @@ func newTicker(interval time.Duration) (<-chan time.Time, func()) {
 
 	ticker := time.NewTicker(interval)
 	return ticker.C, ticker.Stop
-}
-
-// New creates a new buffer instance with the provided options.
-func New(opts ...Option) *Buffer {
-	buffer := &Buffer{
-		dataCh:  make(chan interface{}),
-		flushCh: make(chan struct{}),
-		closeCh: make(chan struct{}),
-		doneCh:  make(chan struct{}),
-		options: resolveOptions(opts...),
-	}
-	go buffer.consume()
-
-	return buffer
 }
