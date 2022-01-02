@@ -3,16 +3,16 @@ package buffer_test
 import (
 	"testing"
 
-	"github.com/globocom/go-buffer/v2"
+	"github.com/globocom/go-buffer/v3"
 )
 
 func BenchmarkBuffer(b *testing.B) {
-	noop := buffer.FlusherFunc(func([]interface{}) {})
+	noop := buffer.FlusherFunc[int](func([]int) {})
 
 	b.Run("push only", func(b *testing.B) {
-		sut := buffer.New(
+		sut := buffer.New[int](
+			noop,
 			buffer.WithSize(uint(b.N)+1),
-			buffer.WithFlusher(noop),
 		)
 		defer sut.Close()
 
@@ -25,9 +25,9 @@ func BenchmarkBuffer(b *testing.B) {
 	})
 
 	b.Run("push and flush", func(b *testing.B) {
-		sut := buffer.New(
+		sut := buffer.New[int](
+			noop,
 			buffer.WithSize(1),
-			buffer.WithFlusher(noop),
 		)
 		defer sut.Close()
 
