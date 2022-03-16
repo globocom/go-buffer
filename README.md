@@ -18,7 +18,7 @@
 
 ## Installation
 
-    go get github.com/globocom/go-buffer
+    go get github.com/globocom/go-buffer/v3
 
 ## Examples
 
@@ -30,19 +30,19 @@ package main
 import (
   "time"
 
-  "github.com/globocom/go-buffer/v2"
+  "github.com/globocom/go-buffer/v3"
 )
 
 func main() {
-  buff := buffer.New(
+  buff := buffer.New[string](
+    // call this function when the buffer needs flushing
+    func(items []string) {
+      for _, item := range items {
+        println(string)
+      }
+    },
     // buffer can hold up to 5 items
     buffer.WithSize(5),
-    // call this function when the buffer needs flushing
-    buffer.WithFlusher(func(items []interface{}) {
-      for _, item := range items {
-        println(item.(string))
-      }
-    }),
   )
   // ensure the buffer
   defer buff.Close()
@@ -68,22 +68,22 @@ package main
 import (
   "time"
 
-  "github.com/globocom/go-buffer/v2"
+  "github.com/globocom/go-buffer/v3"
 )
 
 func main() {
-  buff := buffer.New(
+  buff := buffer.New[string](
+    // call this function when the buffer needs flushing
+    func(items []string) {
+      for _, item := range items {
+        println(item)
+      }
+    },
     // buffer can hold up to 5 items
     buffer.WithSize(5),
     // buffer will be flushed every second, regardless of
     // how many items were pushed
     buffer.WithFlushInterval(time.Second),
-    // call this function when the buffer needs flushing
-    buffer.WithFlusher(func(items []interface{}) {
-      for _, item := range items {
-        println(item.(string))
-      }
-    }),
   )
   defer buff.Close()
 
@@ -110,15 +110,15 @@ import (
 )
 
 func main() {
-  buff := buffer.New(
+  buff := buffer.New[string](
+    // call this function when the buffer needs flushing
+    func(items []string) {
+      for _, item := range items {
+        println(item)
+      }
+    },
     // buffer can hold up to 5 items
     buffer.WithSize(5),
-    // call this function when the buffer needs flushing
-    buffer.WithFlusher(func(items []interface{}) {
-      for _, item := range items {
-        println(item.(string))
-      }
-    }),
   )
   defer buff.Close()
 

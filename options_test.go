@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/globocom/go-buffer/v2"
+	"github.com/globocom/go-buffer/v3"
 )
 
 var _ = Describe("Options", func() {
@@ -19,18 +19,6 @@ var _ = Describe("Options", func() {
 
 		// assert
 		Expect(opts.Size).To(BeIdenticalTo(uint(10)))
-	})
-
-	It("sets up flusher", func() {
-		// arrange
-		opts := &buffer.Options{}
-		flusher := func(items []interface{}) {}
-
-		// act
-		buffer.WithFlusher(buffer.FlusherFunc(flusher))(opts)
-
-		// assert
-		Expect(opts.Flusher).NotTo(BeNil())
 	})
 
 	It("sets up flush interval", func() {
