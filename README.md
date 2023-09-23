@@ -39,10 +39,10 @@ func main() {
     buffer.WithSize(5),
     // call this function when the buffer needs flushing
     buffer.WithFlusher(buffer.FlusherFunc(func(items []interface{}) {
-			for _, item := range items {
-				println(item.(string))
-			}
-		})),
+        for _, item := range items {
+            println(item.(string))
+        }
+    })),
   )
   // ensure the buffer
   defer buff.Close()
@@ -80,10 +80,10 @@ func main() {
     buffer.WithFlushInterval(time.Second),
     // call this function when the buffer needs flushing
     buffer.WithFlusher(buffer.FlusherFunc(func(items []interface{}) {
-			for _, item := range items {
-				println(item.(string))
-			}
-		})),
+        for _, item := range items {
+            println(item.(string))
+        }
+    })),
   )
   defer buff.Close()
 
@@ -115,10 +115,10 @@ func main() {
     buffer.WithSize(5),
     // call this function when the buffer needs flushing
     buffer.WithFlusher(buffer.FlusherFunc(func(items []interface{}) {
-			for _, item := range items {
-				println(item.(string))
-			}
-		})),
+        for _, item := range items {
+            println(item.(string))
+        }
+    })),
   )
   defer buff.Close()
 
