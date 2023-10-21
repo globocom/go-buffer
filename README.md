@@ -38,11 +38,11 @@ func main() {
     // buffer can hold up to 5 items
     buffer.WithSize(5),
     // call this function when the buffer needs flushing
-    buffer.WithFlusher(func(items []interface{}) {
+    buffer.WithFlusher(buffer.FlusherFunc(func(items []interface{}) {
       for _, item := range items {
         println(item.(string))
       }
-    }),
+    })),
   )
   // ensure the buffer
   defer buff.Close()
@@ -54,7 +54,7 @@ func main() {
   buff.Push("item 5")
 
   // block the current goroutine
-  time.Sleep(3*time.Second)
+  time.Sleep(3 * time.Second)
 
   println("done")
 }
@@ -79,11 +79,11 @@ func main() {
     // how many items were pushed
     buffer.WithFlushInterval(time.Second),
     // call this function when the buffer needs flushing
-    buffer.WithFlusher(func(items []interface{}) {
+    buffer.WithFlusher(buffer.FlusherFunc(func(items []interface{}) {
       for _, item := range items {
         println(item.(string))
       }
-    }),
+    })),
   )
   defer buff.Close()
 
@@ -92,7 +92,7 @@ func main() {
   buff.Push("item 3")
 
   // block the current goroutine
-  time.Sleep(3*time.Second)
+  time.Sleep(3 * time.Second)
 
   println("done")
 }
@@ -114,11 +114,11 @@ func main() {
     // buffer can hold up to 5 items
     buffer.WithSize(5),
     // call this function when the buffer needs flushing
-    buffer.WithFlusher(func(items []interface{}) {
+    buffer.WithFlusher(buffer.FlusherFunc(func(items []interface{}) {
       for _, item := range items {
         println(item.(string))
       }
-    }),
+    })),
   )
   defer buff.Close()
 
