@@ -14,17 +14,140 @@
 
 # go-buffer
 
-`go-buffer` represents a buffer that asynchronously flushes its contents. It is useful for applications that need to aggregate data before writing it to an external storage. A buffer is flushed manually, or automatically when it becomes full or after an interval has elapsed, whichever comes first.
+`go-buffer` represents a buffer that asynchronously flushes its contents. It is useful for applications that need to
+aggregate data before writing it to an external storage. A buffer is flushed manually, or automatically when it becomes
+full or after an interval has elapsed, whichever comes first.
 
 ## Installation
 
     go get github.com/globocom/go-buffer
 
+Go < 1.18:
+
+    go get github.com/globocom/go-buffer@v2
+
 ## Examples
+
+> [!NOTE]
+> For v2, see [Examples v2](#examples-v2).
 
 ### Size-triggered flush
 
-```golang
+```go
+package main
+
+import (
+  "time"
+
+  "github.com/globocom/go-buffer/v3"
+)
+
+func main() {
+  buff := buffer.New(
+    // call this function when the buffer needs flushing
+    func(items []string) {
+      for _, item := range items {
+        println(string)
+      }
+    },
+    // buffer can hold up to 5 items
+    buffer.WithSize(5),
+  )
+  // ensure the buffer
+  defer buff.Close()
+
+  buff.Push("item 1")
+  buff.Push("item 2")
+  buff.Push("item 3")
+  buff.Push("item 4")
+  buff.Push("item 5")
+
+  // block the current goroutine
+  time.Sleep(3 * time.Second)
+
+  println("done")
+}
+```
+
+### Interval-triggered flush
+
+```go
+package main
+
+import (
+  "time"
+
+  "github.com/globocom/go-buffer/v3"
+)
+
+func main() {
+  buff := buffer.New(
+    // call this function when the buffer needs flushing
+    func(items []string) {
+      for _, item := range items {
+        println(item)
+      }
+    },
+    // buffer can hold up to 5 items
+    buffer.WithSize(5),
+    // buffer will be flushed every second, regardless of
+    // how many items were pushed
+    buffer.WithFlushInterval(time.Second),
+  )
+  defer buff.Close()
+
+  buff.Push("item 1")
+  buff.Push("item 2")
+  buff.Push("item 3")
+
+  // block the current goroutine
+  time.Sleep(3 * time.Second)
+
+  println("done")
+}
+```
+
+### Manual flush
+
+```go
+package main
+
+import (
+  "time"
+
+  "github.com/globocom/go-buffer/v3"
+)
+
+func main() {
+  buff := buffer.New(
+    // call this function when the buffer needs flushing
+    func(items []string) {
+      for _, item := range items {
+        println(item)
+      }
+    },
+    // buffer can hold up to 5 items
+    buffer.WithSize(5),
+  )
+  defer buff.Close()
+
+  buff.Push("item 1")
+  buff.Push("item 2")
+  buff.Push("item 3")
+
+  // block the current goroutine
+  time.Sleep(3*time.Second)
+
+  buff.Flush()
+  println("done")
+}
+```
+
+## Examples v2
+
+### Size-triggered flush
+
+```go
 package main
 
 import (
@@ -62,7 +185,7 @@ func main() {
 
 ### Interval-triggered flush
 
-```golang
+```go
 package main
 
 import (
@@ -100,7 +223,7 @@ func main() {
 
 ### Manual flush
 
-```golang
+```go
 package main
 
 import (
