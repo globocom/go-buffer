@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="gopher.png">
+  <img src="https://github.com/user-attachments/assets/6a93a5ef-adb4-48ec-a846-0b4391a7e890">
 </p>
 <p align="center">
   <img src="https://img.shields.io/github/workflow/status/globocom/go-buffer/Go?style=flat-square">
