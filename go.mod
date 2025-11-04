@@ -1,5 +1,10 @@
 module github.com/globocom/go-buffer/v3
 
+retract (
+	v3.0.0 // Published prematurely
+	v3.0.1 // Contains retractions only
+)
+
 go 1.24
 
 require (
