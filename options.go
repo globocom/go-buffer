@@ -1,7 +1,6 @@
 package buffer
 
 import (
-	"errors"
 	"fmt"
 	"time"
 )
@@ -15,7 +14,6 @@ const (
 type (
 	// Configuration options.
 	Options struct {
-		Size          uint
 		FlushInterval time.Duration
 		PushTimeout   time.Duration
 		FlushTimeout  time.Duration
@@ -25,13 +23,6 @@ type (
 	// Option setter.
 	Option func(*Options)
 )
-
-// WithSize sets the size of the buffer.
-func WithSize(size uint) Option {
-	return func(options *Options) {
-		options.Size = size
-	}
-}
 
 // WithFlushInterval sets the interval between automatic flushes.
 func WithFlushInterval(interval time.Duration) Option {
@@ -62,9 +53,6 @@ func WithCloseTimeout(timeout time.Duration) Option {
 }
 
 func validateOptions(options *Options) error {
-	if options.Size == 0 {
-		return errors.New(invalidSize)
-	}
 	if options.FlushInterval < 0 {
 		return fmt.Errorf(invalidInterval, "FlushInterval")
 	}
@@ -81,9 +69,8 @@ func validateOptions(options *Options) error {
 	return nil
 }
 
-func resolveOptions(opts ...Option) *Options {
+func resolveOptions(opts ...Option) (*Options, error) {
 	options := &Options{
-		Size:          0,
 		FlushInterval: 0,
 		PushTimeout:   time.Second,
 		FlushTimeout:  time.Second,
@@ -95,8 +82,8 @@ func resolveOptions(opts ...Option) *Options {
 	}
 
 	if err := validateOptions(options); err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return options
+	return options, nil
 }

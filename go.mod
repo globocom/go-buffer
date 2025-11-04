@@ -1,4 +1,4 @@
-module github.com/globocom/go-buffer/v3
+module github.com/globocom/go-buffer/v4
 
 retract (
 	v3.0.0 // Published prematurely
@@ -6,6 +6,10 @@ retract (
 )
 
 go 1.24
+
+retract (
+	v3
+)
 
 require (
 	github.com/onsi/ginkgo v1.13.0

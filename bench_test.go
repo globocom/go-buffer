@@ -10,10 +10,7 @@ func BenchmarkBuffer(b *testing.B) {
 	noop := func([]int) {}
 
 	b.Run("push only", func(b *testing.B) {
-		sut := buffer.New(
-			noop,
-			buffer.WithSize(uint(b.N)+1),
-		)
+		sut := buffer.New(uint(b.N)+1, noop)
 		defer sut.Close()
 
 		for b.Loop() {
@@ -25,10 +22,7 @@ func BenchmarkBuffer(b *testing.B) {
 	})
 
 	b.Run("push and flush", func(b *testing.B) {
-		sut := buffer.New(
-			noop,
-			buffer.WithSize(1),
-		)
+		sut := buffer.New(1, noop)
 		defer sut.Close()
 
 		for b.Loop() {
