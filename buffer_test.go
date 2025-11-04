@@ -19,10 +19,7 @@ var _ = Describe("Buffer", func() {
 	Context("Constructor", func() {
 		It("creates a new Buffer instance", func() {
 			// act
-			sut := buffer.New(
-				flusher.Flush,
-				buffer.WithSize(10),
-			)
+			sut := buffer.New(10, flusher.Flush)
 
 			// assert
 			Expect(sut).NotTo(BeNil())
@@ -30,60 +27,38 @@ var _ = Describe("Buffer", func() {
 
 		It("panics when provided an invalid flusher", func() {
 			Expect(func() {
-				buffer.New[string](
-					nil,
-					buffer.WithSize(1),
-				)
+				buffer.New[string](1, nil)
 			}).To(Panic())
 		})
 
 		Context("invalid options", func() {
 			It("panics when provided an invalid size", func() {
 				Expect(func() {
-					buffer.New(
-						flusher.Flush,
-						buffer.WithSize(0),
-					)
+					buffer.New(0, flusher.Flush)
 				}).To(Panic())
 			})
 
 			It("panics when provided an invalid flush interval", func() {
 				Expect(func() {
-					buffer.New(
-						flusher.Flush,
-						buffer.WithSize(1),
-						buffer.WithFlushInterval(-1),
-					)
+					buffer.New(1, flusher.Flush, buffer.WithFlushInterval(-1))
 				}).To(Panic())
 			})
 
 			It("panics when provided an invalid push timeout", func() {
 				Expect(func() {
-					buffer.New(
-						flusher.Flush,
-						buffer.WithSize(1),
-						buffer.WithPushTimeout(-1),
-					)
+					buffer.New(1, flusher.Flush, buffer.WithPushTimeout(-1))
 				}).To(Panic())
 			})
 
 			It("panics when provided an invalid flush timeout", func() {
 				Expect(func() {
-					buffer.New(
-						flusher.Flush,
-						buffer.WithSize(1),
-						buffer.WithFlushTimeout(-1),
-					)
+					buffer.New(1, flusher.Flush, buffer.WithFlushTimeout(-1))
 				}).To(Panic())
 			})
 
 			It("panics when provided an invalid close timeout", func() {
 				Expect(func() {
-					buffer.New(
-						flusher.Flush,
-						buffer.WithSize(1),
-						buffer.WithCloseTimeout(-1),
-					)
+					buffer.New(1, flusher.Flush, buffer.WithCloseTimeout(-1))
 				}).To(Panic())
 			})
 		})
@@ -92,10 +67,7 @@ var _ = Describe("Buffer", func() {
 	Context("Pushing", func() {
 		It("pushes items into the buffer when Push is called", func() {
 			// arrange
-			sut := buffer.New(
-				flusher.Flush,
-				buffer.WithSize(3),
-			)
+			sut := buffer.New(3, flusher.Flush)
 
 			// act
 			err1 := sut.Push("a")
@@ -111,11 +83,7 @@ var _ = Describe("Buffer", func() {
 		It("fails when Push cannot execute in a timely fashion", func() {
 			// arrange
 			flusher.Func = func() { select {} }
-			sut := buffer.New(
-				flusher.Flush,
-				buffer.WithSize(2),
-				buffer.WithPushTimeout(time.Second),
-			)
+			sut := buffer.New(2, flusher.Flush, buffer.WithPushTimeout(time.Second))
 
 			// act
 			err1 := sut.Push("a")
@@ -130,10 +98,7 @@ var _ = Describe("Buffer", func() {
 
 		It("fails when the buffer is closed", func() {
 			// arrange
-			sut := buffer.New(
-				flusher.Flush,
-				buffer.WithSize(2),
-			)
+			sut := buffer.New(2, flusher.Flush)
 			_ = sut.Close()
 
 			// act
@@ -147,10 +112,7 @@ var _ = Describe("Buffer", func() {
 	Context("Flushing", func() {
 		It("flushes the buffer when it fills up", func(done Done) {
 			// arrange
-			sut := buffer.New(
-				flusher.Flush,
-				buffer.WithSize(5),
-			)
+			sut := buffer.New(5, flusher.Flush)
 
 			// act
 			_ = sut.Push("a")
@@ -169,11 +131,7 @@ var _ = Describe("Buffer", func() {
 			// arrange
 			interval := 3 * time.Second
 			start := time.Now()
-			sut := buffer.New(
-				flusher.Flush,
-				buffer.WithSize(5),
-				buffer.WithFlushInterval(interval),
-			)
+			sut := buffer.New(5, flusher.Flush, buffer.WithFlushInterval(interval))
 
 			// act
 			_ = sut.Push("a")
@@ -187,10 +145,7 @@ var _ = Describe("Buffer", func() {
 
 		It("flushes the buffer when Flush is called", func(done Done) {
 			// arrange
-			sut := buffer.New(
-				flusher.Flush,
-				buffer.WithSize(3),
-			)
+			sut := buffer.New(3, flusher.Flush)
 			_ = sut.Push("a")
 			_ = sut.Push("b")
 
@@ -207,11 +162,7 @@ var _ = Describe("Buffer", func() {
 		It("fails when Flush cannot execute in a timely fashion", func() {
 			// arrange
 			flusher.Func = func() { time.Sleep(3 * time.Second) }
-			sut := buffer.New(
-				flusher.Flush,
-				buffer.WithSize(1),
-				buffer.WithFlushTimeout(time.Second),
-			)
+			sut := buffer.New(1, flusher.Flush, buffer.WithFlushTimeout(time.Second))
 			_ = sut.Push("a")
 
 			// act
@@ -223,10 +174,7 @@ var _ = Describe("Buffer", func() {
 
 		It("fails when the buffer is closed", func() {
 			// arrange
-			sut := buffer.New[string](
-				flusher.Flush,
-				buffer.WithSize(2),
-			)
+			sut := buffer.New[string](2, flusher.Flush)
 			_ = sut.Close()
 
 			// act
@@ -240,10 +188,7 @@ var _ = Describe("Buffer", func() {
 	Context("Closing", func() {
 		It("flushes the buffer and closes it when Close is called", func(done Done) {
 			// arrange
-			sut := buffer.New(
-				flusher.Flush,
-				buffer.WithSize(3),
-			)
+			sut := buffer.New(3, flusher.Flush)
 			_ = sut.Push("a")
 			_ = sut.Push("b")
 
@@ -261,11 +206,7 @@ var _ = Describe("Buffer", func() {
 			// arrange
 			flusher.Func = func() { time.Sleep(2 * time.Second) }
 
-			sut := buffer.New(
-				flusher.Flush,
-				buffer.WithSize(1),
-				buffer.WithCloseTimeout(time.Second),
-			)
+			sut := buffer.New(1, flusher.Flush, buffer.WithCloseTimeout(time.Second))
 			_ = sut.Push("a")
 
 			// act
@@ -279,11 +220,7 @@ var _ = Describe("Buffer", func() {
 			// arrange
 			flusher.Func = func() { time.Sleep(2 * time.Second) }
 
-			sut := buffer.New(
-				flusher.Flush,
-				buffer.WithSize(1),
-				buffer.WithCloseTimeout(time.Second),
-			)
+			sut := buffer.New(1, flusher.Flush, buffer.WithCloseTimeout(time.Second))
 			_ = sut.Close()
 
 			// act
@@ -297,11 +234,7 @@ var _ = Describe("Buffer", func() {
 			// arrange
 			flusher.Func = func() { time.Sleep(2 * time.Second) }
 
-			sut := buffer.New(
-				flusher.Flush,
-				buffer.WithSize(1),
-				buffer.WithCloseTimeout(time.Second),
-			)
+			sut := buffer.New(1, flusher.Flush, buffer.WithCloseTimeout(time.Second))
 			_ = sut.Push("a")
 
 			// act

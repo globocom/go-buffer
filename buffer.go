@@ -2,6 +2,7 @@ package buffer
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"time"
 )
@@ -17,33 +18,44 @@ type (
 	// Buffer represents a data buffer that is asynchronously flushed, either manually or automatically.
 	Buffer[T any] struct {
 		io.Closer
-		flushFunc func([]T)
-		dataCh    chan T
-		flushCh   chan struct{}
-		closeCh   chan struct{}
-		doneCh    chan struct{}
-		options   *Options
+		size    uint
+		flusher func([]T)
+		options *Options
+		dataCh  chan T
+		flushCh chan struct{}
+		closeCh chan struct{}
+		doneCh  chan struct{}
 	}
 )
 
-// New creates a new buffer instance with the provided flush function and options.
-// It panics if provided with a nil flush function.
-func New[T any](flushFunc func([]T), opts ...Option) *Buffer[T] {
-	if flushFunc == nil {
-		panic("flush function cannot be nil")
+// New creates a new buffer instance with the provided size, flush function and options.
+// It returns an error if provided with invalid arguments.
+func New[T any](size uint, flusher func([]T), opts ...Option) (*Buffer[T], error) {
+	if size == 0 {
+		return nil, fmt.Errorf("size cannot be zero")
+	}
+
+	if flusher == nil {
+		return nil, fmt.Errorf("flush function cannot be nil")
+	}
+
+	options, err := resolveOptions(opts...)
+	if err != nil {
+		return nil, err
 	}
 
 	buffer := &Buffer[T]{
-		flushFunc: flushFunc,
-		dataCh:    make(chan T),
-		flushCh:   make(chan struct{}),
-		closeCh:   make(chan struct{}),
-		doneCh:    make(chan struct{}),
-		options:   resolveOptions(opts...),
+		size:    size,
+		flusher: flusher,
+		options: options,
+		dataCh:  make(chan T),
+		flushCh: make(chan struct{}),
+		closeCh: make(chan struct{}),
+		doneCh:  make(chan struct{}),
 	}
 	go buffer.consume()
 
-	return buffer
+	return buffer, nil
 }
 
 // Push appends an item to the end of the buffer.
@@ -122,7 +134,7 @@ func (buffer *Buffer[T]) closed() bool {
 
 func (buffer *Buffer[T]) consume() {
 	count := 0
-	items := make([]T, buffer.options.Size)
+	items := make([]T, buffer.size)
 	mustFlush := false
 	ticker, stopTicker := newTicker(buffer.options.FlushInterval)
 
@@ -144,10 +156,10 @@ func (buffer *Buffer[T]) consume() {
 
 		if mustFlush {
 			stopTicker()
-			buffer.flushFunc(items[:count])
+			buffer.flusher(items[:count])
 
 			count = 0
-			items = make([]T, buffer.options.Size)
+			items = make([]T, buffer.size)
 			mustFlush = false
 			ticker, stopTicker = newTicker(buffer.options.FlushInterval)
 		}
